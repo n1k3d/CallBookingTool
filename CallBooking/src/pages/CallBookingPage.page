@@ -1,0 +1,126 @@
+<apex:page controller="CallBookingClass"  showHeader="false" standardStylesheets="false" standardstylesheets="false">
+<!-- 
+This page displays a booking calendar with user's existing events in the calendar, events will be created 
+by going to the Week tab and choosing the relevent time to book the call.
+-->    
+
+    <!-- Scripts included to create records from this page -->    
+	<apex:includeScript value="/soap/ajax/32.0/connection.js"/>
+	<apex:includeScript value="/soap/ajax/32.0/apex.js"/>   
+    
+    <!-- Calling Static resources relevent to the calendar-->
+	<link href="{!$Resource.FullCalendarMinCSS}" rel="stylesheet" />
+    <link href="{!$Resource.FullCalendarPrintCSS}" rel="stylesheet" media="print" />
+    <link href="{!$Resource.SchedulerCSS}" rel="stylesheet" />
+   
+    <apex:includeScript value="{!$Resource.MomentMinJS}"  />
+    <apex:includeScript value="{!$Resource.JQueryUIMinJS}"  />﻿
+
+    <!-- Scripts included for jQuery -->  
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+
+    <!-- Scripts included for main calendar -->  
+    <script src="{!$Resource.fullCalendarMinJS}"></script>
+    <script src="{!$Resource.schedulerJS}"></script>
+     
+ <body>             
+   <script type="text/javascript"> 
+      function getEventData() {                         // records are retrieved from soql database
+        Visualforce.remoting.Manager.invokeAction(
+            '{!$RemoteAction.CallBookingClass.eventdata}',  // the will call the apex class to populate the user's event list 
+            function(result, event){
+                if (event.status) {
+                    evt =  JSON.parse(result);
+                    
+                    $('#calendar').fullCalendar({       // html element and library name
+                        // enable schedular functionality with license key
+                        schedulerLicenseKey: 'CC-Attribution-NonCommercial-NoDerivatives',
+                        // this enables clicking on a particular date and time in the calendar
+                        selectable: true,
+                        // emphasizes business hours
+                        businessHours: true,
+                        // event dragging & resizing
+                        editable: true,
+                        // timezone
+                        timezone: 'Asia/Kolkata',
+                        handleWindowResize: true,
+                        minTime: '07:30:00', // Start time for the calendar
+                        maxTime: '22:00:00', // End time for the calendar
+                        displayEventTime: true, // Display event time
+                        // header
+                        header: {
+                        left: 'prev,next',
+                        center: 'title',
+                        right: 'month,agendaWeek,agendaDay'
+                        
+                    },
+                        select: function(startDate, endDate, jsEvent, view) {  // This will start the event creation process                            
+                            createEvent1(startDate.format(),endDate.format()); // on the selected date and time
+                        },
+                        events: evt 	// this will display the existing user's event list in the calendar
+                    }) 
+                } else if (event.type === 'exception') { // if any exception occurs during retrieval of events 
+                    console.log(event.message);
+                } else {
+                    console.log(event.message);
+                }
+            }, 
+            {escape: false} // to prevent XML code being dumped 
+        );
+    }
+   
+   function createEvent1(startDate,endDate){
+		var sDate = getCurrentSOQLDateTimeLiteral(startDate);
+       	var eDate=getCurrentSOQLDateTimeLiteral(endDate);
+       alert(sDate+eDate);
+       	var cId = '{!$CurrentPage.parameters.Id}';
+       	var nam = '{!$CurrentPage.parameters.name}';
+       	var Owner = '{!$User.Id}';
+       	var Ownername = '{!$User.FirstName }'+' '+'{!$User.LastName }';
+
+       sforce.connection.sessionId = '{!$Api.Session_ID}'; 
+                                             
+        var instanceOfRecord = new sforce.SObject("Event");
+                instanceOfRecord.WhoId = cId;
+                instanceOfRecord.Subject = 'Call Request with '+nam;
+                instanceOfRecord.OwnerId = Owner;
+                instanceOfRecord.StartDateTime = sDate;
+                instanceOfRecord.EndDateTime = eDate;
+       
+       var results = sforce.connection.create([instanceOfRecord]);         // this will create a new event record
+       var event = results[0].id;  		
+
+       relAdd(event,cId);
+           alert('The requested event is created. You will be redirected to event edit page.');
+       location.reload();
+   }             
+     
+     function twoDigit(number) {
+      var twodigit = number >= 10 ? number : "0"+number.toString();
+      return twodigit;
+    }
+    function getCurrentSOQLDateTimeLiteral(mydate) {
+        var dt = new Date(mydate); // Datetime can be updated here if needed.
+        var soqlDTLiteral = dt.getUTCFullYear() +'-'+twoDigit(dt.getUTCMonth()+1)+'-'+twoDigit(dt.getUTCDate());
+        soqlDTLiteral += 'T' + twoDigit(dt.getUTCHours()) + ':' + twoDigit(dt.getUTCMinutes()) + ':' + twoDigit(dt.getUTCSeconds());
+        soqlDTLiteral += 'Z';
+        return soqlDTLiteral;
+    }
+     
+     $(document).ready(function() { // gets called when page is loaded
+        getEventData();
+    });
+    </script>
+
+<apex:sectionHeader title="Call Booking Calendar"/>
+<apex:form >
+    <apex:actionFunction name="relAdd" action="{!addRelation}" rerender="calendar">
+    <apex:param name="event" value=""/>  
+    <apex:param name="cId" value="" /> 
+</apex:actionFunction>
+               
+<div id="calendar"></div>
+</apex:form>
+</body>
+</apex:page>
