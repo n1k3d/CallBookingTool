@@ -5,11 +5,11 @@ by going to the Week tab and choosing the relevent time to book the call.
 -->    
 
     <!-- Scripts included to create records from this page -->    
-	<apex:includeScript value="/soap/ajax/32.0/connection.js"/>
-	<apex:includeScript value="/soap/ajax/32.0/apex.js"/>   
+    <apex:includeScript value="/soap/ajax/32.0/connection.js"/>
+    <apex:includeScript value="/soap/ajax/32.0/apex.js"/>   
     
     <!-- Calling Static resources relevent to the calendar-->
-	<link href="{!$Resource.FullCalendarMinCSS}" rel="stylesheet" />
+    <link href="{!$Resource.FullCalendarMinCSS}" rel="stylesheet" />
     <link href="{!$Resource.FullCalendarPrintCSS}" rel="stylesheet" media="print" />
     <link href="{!$Resource.SchedulerCSS}" rel="stylesheet" />
    
@@ -58,7 +58,7 @@ by going to the Week tab and choosing the relevent time to book the call.
                         select: function(startDate, endDate, jsEvent, view) {  // This will start the event creation process                            
                             createEvent1(startDate.format(),endDate.format()); // on the selected date and time
                         },
-                        events: evt 	// this will display the existing user's event list in the calendar
+                        events: evt     // this will display the existing user's event list in the calendar
                     }) 
                 } else if (event.type === 'exception') { // if any exception occurs during retrieval of events 
                     console.log(event.message);
@@ -71,13 +71,12 @@ by going to the Week tab and choosing the relevent time to book the call.
     }
    
    function createEvent1(startDate,endDate){
-		var sDate = getCurrentSOQLDateTimeLiteral(startDate);
-       	var eDate=getCurrentSOQLDateTimeLiteral(endDate);
-       alert(sDate+eDate);
-       	var cId = '{!$CurrentPage.parameters.Id}';
-       	var nam = '{!$CurrentPage.parameters.name}';
-       	var Owner = '{!$User.Id}';
-       	var Ownername = '{!$User.FirstName }'+' '+'{!$User.LastName }';
+        var sDate = getCurrentSOQLDateTimeLiteral(startDate);
+        var eDate=getCurrentSOQLDateTimeLiteral(endDate);
+        var cId = '{!$CurrentPage.parameters.Id}';
+        var nam = '{!$CurrentPage.parameters.name}';
+        var Owner = '{!$User.Id}';
+        var Ownername = '{!$User.FirstName }'+' '+'{!$User.LastName }';
 
        sforce.connection.sessionId = '{!$Api.Session_ID}'; 
                                              
@@ -89,7 +88,7 @@ by going to the Week tab and choosing the relevent time to book the call.
                 instanceOfRecord.EndDateTime = eDate;
        
        var results = sforce.connection.create([instanceOfRecord]);         // this will create a new event record
-       var event = results[0].id;  		
+       var event = results[0].id;       
 
        relAdd(event,cId);
            alert('The requested event is created. You will be redirected to event edit page.');
